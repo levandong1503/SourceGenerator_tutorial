@@ -14,6 +14,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" />
 
-	  <ProjectReference Include="..\SourceGenerator\SourceGenerator.csproj"  />
+	  <ProjectReference Include="..\SourceGenerator\SourceGenerator.csproj"  OutputItemType="Analyzer" ReferenceOutputAssembly="false"  />
   </ItemGroup>
+	<ItemGroup>
+		<Compile Include="..\SourceGenerator\EntityToDtoAttribute.cs" Link="EntityToDtoAttribute.cs" />
+	</ItemGroup>
 </Project>
