@@ -1,14 +1,8 @@
-﻿using SourceGenerator;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Nws.AbpSourceGenerator;
 
-namespace MySourceGenerator2
+namespace MySourceGenerator2;
+
+[PropertiesFrom<BookEntity>(ignores = new string[]{nameof(BookEntity.PublishDate)})]
+public partial class BookGenerateDto
 {
-    [EntityToDto(typeof(BookEntity))]
-    public partial class BookGenerateDto
-    {
-    }
 }

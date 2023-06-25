@@ -5,6 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	  <LangVersion>11.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,6 @@
 	  <ProjectReference Include="..\SourceGenerator\SourceGenerator.csproj"  OutputItemType="Analyzer" ReferenceOutputAssembly="false"  />
   </ItemGroup>
 	<ItemGroup>
-		<Compile Include="..\SourceGenerator\EntityToDtoAttribute.cs" Link="EntityToDtoAttribute.cs" />
+		<Compile Include="..\SourceGenerator\PropertiesFromAttribute.cs" Link="PropertiesFromAttribute.cs" />
 	</ItemGroup>
 </Project>
