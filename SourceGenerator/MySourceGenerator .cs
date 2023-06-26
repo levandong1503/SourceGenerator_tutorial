@@ -51,7 +51,7 @@ public partial class {clsPlaceholder}
             var compilation = context.Compilation;
 
 
-            //Debugger.Launch();
+            Debugger.Launch();
             //DBG
             var entityClasses = compilation.SyntaxTrees
             .SelectMany(st => st.GetRoot().DescendantNodes())
@@ -67,10 +67,11 @@ public partial class {clsPlaceholder}
 
                 // Lấy loại entity từ attribute EntityType
                 var entityType = entitySymbol.GetAttributes().First(attr => attr.AttributeClass.MetadataName == entityTypeAttribute.Name);
+                var proper2 = entityType.ConstructorArguments.Select(x => x.Values.Select(y => y.Value));
                 var proper = entityType.NamedArguments
                     .Select(x =>
                     (x.Key, x.Value.Values.Select(x => x.Value.ToString())));
-                //foreach(var item in proper)
+                //foreach (var item in proper)
                 //{
                 //    var values = item.Values.Select(x => x.Value.ToString());
                 //}
@@ -78,12 +79,12 @@ public partial class {clsPlaceholder}
                 //var properties = entityAtt.GetMembers().OfType<IPropertySymbol>()
                 //.Where(prop => prop.DeclaredAccessibility == Accessibility.Public)
                 //.ToList();
-                // Tạo tên của class DTO
+                //                  Tạo tên của class DTO
                 //var dtoClassName = entityType.Name + "Dto";
             }
             //DBG
 
-            IEnumerable<(ISymbol dtoSymbol, ITypeSymbol entitySymbol, IEnumerable<(string key, IEnumerable<string> propertiesIgnores)> accept)> dtoClassToAttributeTypeMappings = compilation.SyntaxTrees
+            IEnumerable<(ISymbol dtoSymbol, ITypeSymbol entitySymbol, List<IEnumerable<string>> accept)> dtoClassToAttributeTypeMappings = compilation.SyntaxTrees
                .SelectMany(st => st.GetRoot().DescendantNodes())
                .OfType<ClassDeclarationSyntax>()
                .Where(
@@ -93,23 +94,24 @@ public partial class {clsPlaceholder}
                     .GetAttributes()
                     .Any(attr => attr.AttributeClass.MetadataName == entityTypeAttribute.Name))
                .Select(
-                x => (
-                    dtoSymbol: context.Compilation
-                        .GetSemanticModel(x.SyntaxTree)
-                        .GetDeclaredSymbol(x),
-                    entitySymbol: compilation
+                x =>
+                {
+                    var propertysFromAttribute = compilation
                         .GetSemanticModel(x.SyntaxTree)
                         .GetDeclaredSymbol(x)
                         .GetAttributes()
-                        .First(attr => attr.AttributeClass.MetadataName == entityTypeAttribute.Name)
-                        .AttributeClass.TypeArguments.First(),
-                    accept: compilation             //
-                        .GetSemanticModel(x.SyntaxTree)
-                        .GetDeclaredSymbol(x)
-                        .GetAttributes()
-                        .First(attr => attr.AttributeClass.MetadataName == entityTypeAttribute.Name)
-                                .NamedArguments.Select(x =>
-                    (x.Key, propertiesIgnores: x.Value.Values.Select(x => x.Value.ToString()))))
+                        .First(attr => attr.AttributeClass.MetadataName == entityTypeAttribute.Name);
+                    return (
+                   dtoSymbol: context.Compilation
+                       .GetSemanticModel(x.SyntaxTree)
+                       .GetDeclaredSymbol(x),
+                   entitySymbol: propertysFromAttribute
+                       .AttributeClass.TypeArguments.First(),
+                   accept: propertysFromAttribute
+                       .ConstructorArguments.Select(x => x.IsNull
+                       ? null
+                       :x.Values.Select(y => y.Value.ToString())).ToList());
+                }
                 )
                .ToList();
             foreach (var (dtoSymbol, entitySymbol, accept) in dtoClassToAttributeTypeMappings)
@@ -120,20 +122,25 @@ public partial class {clsPlaceholder}
                     .ToList();
                 var propertyDeclarations = string.Join("\n", properties.Where(properties =>
                 {
-                    foreach (var itemAccept in accept)
+                    //Chạy Logic của Onlies
+                    if (accept[1] != null && accept[1].Count() > 0)
                     {
-                        if (itemAccept.key == "ignores")
+                        foreach (var itemProper in accept[1])
                         {
-                            foreach (var itemProper in itemAccept.propertiesIgnores)
-                            {
-                                if(itemProper == properties.MetadataName)
-                                {
-                                    return false;
-                                }
-                            }
+                            return itemProper == properties.MetadataName;
+
                         }
                     }
-                    return true;
+                    //Chạy Logic của Ignore
+                    else
+                    {
+                        foreach (var itemProper in accept[0])
+                        {
+                            return itemProper != properties.MetadataName;
+                        }
+
+                    }
+                    return false;
                 }).Select(
                     x => string.Format(propertyTemplate, x.Type, x.Name)
                 ));
